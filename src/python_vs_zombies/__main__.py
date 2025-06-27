@@ -1,98 +1,70 @@
+from tkinter import *
 from customtkinter import *
 from PIL import Image,ImageTk
 import os
 
-def start():
-    levels = 0
 
-    run_game = CTk()
-    run_game.geometry('640x480')
-    run_game.minsize(640, 480)
-    run_game.maxsize(1024, 768)
-    # grid
-    run_game.columnconfigure(0, weight=1)
-    run_game.columnconfigure(1, weight=1)
-    run_game.columnconfigure(2, weight=1)
-    run_game.columnconfigure(3, weight=1)
-    run_game.columnconfigure(4, weight=1)
-    run_game.columnconfigure(5, weight=1)
-    run_game.columnconfigure(6, weight=1)
-    run_game.columnconfigure(7, weight=1)
-    run_game.columnconfigure(8, weight=1)
-    run_game.rowconfigure(0, weight=1)
-    run_game.rowconfigure(1, weight=1)
-    run_game.rowconfigure(2, weight=1)
-    run_game.rowconfigure(3, weight=1)
-    run_game.rowconfigure(4, weight=1)
-    run_game.rowconfigure(5, weight=1)
-    # size
-    noraml_button = dict(width=170, height=170, )
-    progress = dict(width=190, height=20)
-    normal_lable = CTkFont(family="Time New Roman", size=20)
-    # lable
-    lev = CTkLabel(run_game,text=f"level:{levels}", font=normal_lable)
-    lev.grid(row= 0,column=0,sticky='nw')
-    # import
-    base_back= os.path.dirname(__file__)
-    path_back= os.path.join(base_back, "assets", "images", "backgropund.png")
-    back= Image.open(path_back).resize((200,200))
-    ctk_back= CTkImage(light_image=back)
-    # Image
-    lable_back= CTkLabel(run_game, image=ctk_back, width=20, height=20,text='')
-    lable_back.grid(row= 3, column= 3)
-    # progress
-    game_time = CTkProgressBar(run_game, orientation=HORIZONTAL, **progress)
-    game_time.grid(row = 0, column=9, columnspan=3, sticky='n')
+def start_game():
+    root = CTk()
+    root.title("Python v.s Zombies")
+    root.minsize(640, 480)
+    root.maxsize(1024, 768)
+    root.columnconfigure(0, weight=1)
+    root.columnconfigure(1, weight=1)
+    root.columnconfigure(2, weight=1)
+    root.rowconfigure(0, weight=1)
+    root.rowconfigure(1, weight=1)
 
-    for i in range(20):
-        game_time.start()
-        if i == 20 :
-            game_time.stop()
-    run_game.mainloop()
+    # Load image
+    base_dir= os.path.dirname(__file__)
+    background_path= os.path.join(base_dir, "assets/images/background.png")
+    image = PhotoImage(file=background_path)
+    bg_image = Label(root, image=image)
+    bg_image.place(relheight=1, relwidth=1)
 
-def quit_window(window):
+    label_col_0 = CTkLabel(root, text="1")
+    label_col_1 = CTkLabel(root, text="0")
+    label_col_2 = CTkLabel(root, text="0")
+    label_col_0.grid(row=0, column=0)
+    label_col_1.grid(row=0, column=1)
+    label_col_2.grid(row=0, column=2)
+    root.mainloop()
+
+def start_game_pressed(window):
     window.destroy()
-def start_game(window):
-    window.destroy()
-    start()
+    start_game()
 
 def main():
     # Main Window
-    main_window = CTk()
-    main_window.title('Python v.s Zombies')
-    main_window.geometry('640x480')
-    main_window.minsize(640, 480)
-    main_window.maxsize(1024, 768)
-    main_window.columnconfigure(0, weight=1)
-    main_window.columnconfigure(1, weight=1)
-    main_window.columnconfigure(2, weight=1)
-    main_window.rowconfigure(0, weight=1)
-    main_window.rowconfigure(1, weight=1)
+    game_window = CTk()
+    game_window.title('Python v.s Zombies')
+    game_window.minsize(640, 480)
+    game_window.maxsize(1024, 768)
+    game_window.columnconfigure(0, weight=1)
+    game_window.columnconfigure(1, weight=1)
+    game_window.columnconfigure(2, weight=1)
+    game_window.rowconfigure(0, weight=1)
+    game_window.rowconfigure(1, weight=1)
+
     #font
     title_font = CTkFont(family="Time New Roman", size=50)
     normal_font = CTkFont(family="Time New Roman", size=20)
-    # lable
-    game_title = CTkLabel(main_window, text="Python vs Zombies", font=title_font)
+
+    # label
+    game_title = CTkLabel(game_window, text="Python vs Zombies", font=title_font)
     game_title.grid(row=0, column=0, columnspan=3, sticky='nesw')
+
     # Buttons
     button_configurations = dict(width=160, height=160, font=normal_font)
-    start_buttom = CTkButton(main_window, text="Start Game", **button_configurations, command=lambda: start_game(main_window))
-    settings_buttom = CTkButton(main_window, text="Settings", **button_configurations)
-    quit_buttom = CTkButton(main_window, text="Quit", command=lambda: quit_window(main_window), **button_configurations)
+    start_buttom = CTkButton(game_window, text="Start Game", **button_configurations, command=lambda: start_game_pressed(game_window))
+    settings_buttom = CTkButton(game_window, text="Settings", **button_configurations)
+    quit_buttom = CTkButton(game_window, text="Quit", command=game_window.destroy, **button_configurations)
     start_buttom.grid(row=1, column=0, sticky='n')
     settings_buttom.grid(row=1, column=1, sticky='n')
     quit_buttom.grid(row=1, column=2, sticky='n')
 
-    main_window.mainloop()
+    game_window.mainloop()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-#    ******** what is the problme???????*********
