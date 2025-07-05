@@ -1,25 +1,17 @@
+import os
+import time
+
 from tkinter import *
 from customtkinter import *
 from PIL import Image,ImageTk
-import os
-
 
 def start_game():
     root = CTk()
     root.title("Python v.s Zombies")
     root.minsize(1024, 600)
     root.maxsize(1024, 600)
-    root.columnconfigure(0, weight=3)
-    root.columnconfigure(1, weight=2)
-    root.columnconfigure(2, weight=2)
-    root.columnconfigure(3, weight=2)
-    root.columnconfigure(4, weight=2)
-    root.columnconfigure(5, weight=2)
-    root.columnconfigure(6, weight=2)
-    root.columnconfigure(7, weight=2)
-    root.columnconfigure(8, weight=2)
-    root.columnconfigure(9, weight=2)
-    root.columnconfigure(10, weight=1)
+    # root.columnconfigure(0, weight=2)
+    # root.columnconfigure(1, weight=3)
     root.rowconfigure(0, weight=1)
     root.rowconfigure(1, weight=2)
     root.rowconfigure(3, weight=2)
@@ -33,14 +25,26 @@ def start_game():
     bg_image = CTkLabel(root, image=image, text="")
     bg_image.place(relheight=1, relwidth=1)
     # test
-    plant1= CTkLabel(root, text="flower")
-    plant1.grid(row=2, column=2)
-    zobmei1= CTkLabel(root, text="zombie") 
-    zobmei1.grid(row=2, column= 11)
+    # plant1= CTkLabel(root, text="flower")
+    # plant1.grid(row=2, column=2)
+    # zobmei1= CTkLabel(root, text="zombie") 
+    # zobmei1.grid(row=2, column= 11)
+    def movement(root, label):
+        move = 0
+        for i in range(10):
+            move += 1
+            label.grid(row= 2, column= 10, padx= move, pady= 1, sticky="w")
+            root.update()
+            time.sleep(0.2)
     potato= CTkLabel(root, text="potato")
-    potato.grid(row= 2, column= 10)
-    point= CTkLabel(root, text="point:20")
-    point.grid(row=0, column=2)
+    potato.grid(row= 2, column= 1, padx= 15, pady= 60, sticky="e")
+    btm = CTkButton(root, text="move!", command=lambda: movement(root, dadash))
+    btm.grid(row = 7)
+    dadash= CTkLabel(root, text="dada potato")
+    dadash.grid(row= 2, column= 10, padx= 190, pady= 1, sticky="w")
+    
+    # point= CTkLabel(root, text="point:20")
+    # point.grid(row=0, column=2)
     # timeline= CTkProgressBar(root)
     # timeline.grid(row= 0, column= 12)
 
