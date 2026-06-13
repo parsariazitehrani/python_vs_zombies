@@ -156,7 +156,7 @@ while True:
                 for j in object_in_garden["plant"]:
                     j.draw()
                     if i["obj"].y == j.y:
-                        if i["obj"].y - balls[j].y == 10:
+                        if i["obj"].x - balls[j].x == 10:
                             i["obj"].take_damage()
                         if j not in balls:
                             try:
