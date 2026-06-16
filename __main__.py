@@ -40,11 +40,8 @@ class Plant():
         self.y = y
         self.image = image
     def draw(self):
-        try:
-            new = pygame.transform.scale(self.image, (90,90))
-            display.blit(new, (self.x, self.y))
-        except:
-            pass
+        new = pygame.transform.scale(self.image, (90,90))
+        display.blit(new, (self.x, self.y))
     def take_damage(self, damage):
         self.hp -= damage
         if self.hp <= 0:
@@ -55,17 +52,22 @@ class Plant():
 class Potato(Plant):
     def __init__(self, image, x, y):
         super().__init__(image, x, y)
+class Ball():
+    def __init__(self, x, y, pea):
+        self.pea = pea
+        self.x = x
+        self.y = y
+        balls.update({self.pea : {"image":pea_ball, "line":int(y/multiplication_y), "ball":self}})
+    def draw(self):
+        new_pea_ball = pygame.transform.scale(pea_ball ,(25,25))  
+        display.blit(new_pea_ball, (self.x + 35, self.y + 10))
 
 class Pea(Plant):
     def __init__(self, image, x, y):
         super().__init__(image, x, y)
-    def attack(self, x, y):
-            self.xball = x
-            self.yball = y
-            balls.update({self : {"image":pea_ball, "line":int(y/multiplication_y)}})
-    def draw_ball(self):
-        new_pea_ball = pygame.transform.scale(pea_ball ,(25,25))  
-        display.blit(new_pea_ball, (self.xball + 25, self.yball + 10))
+    def attack(self):
+        Ball(self.x, self.y, self)
+            
     
 class Button():
     def __init__(self, color, text):       
@@ -94,7 +96,8 @@ class Zombie():
     def take_damage(self):
         self.hp -= 20
         if self.hp < 0: 
-            object_in_garden["zombie"].pop(self)
+            # object_in_garden["zombie"].remove({"obj":self,"line":int(self.y/multiplication_y), "move":True})
+            object_in_garden["zombie"].pop()
 button = {        # get the keyboard click by "if event.key" in while loop and form this dict understand what plant should planting
     "s" : {"class":Plant, "image":flower},
     "p" : {"class":Potato, "image":potatto},
@@ -156,13 +159,14 @@ while True:
                 for j in object_in_garden["plant"]:
                     j.draw()
                     if i["obj"].y == j.y:
-                        if i["obj"].x - balls[j].x == 10:
-                            i["obj"].take_damage()
-                        if j not in balls:
-                            try:
-                                j.attack(j.x, j.y)
-                            except AttributeError:
-                                pass
+                        if j not in balls and type(j) == Pea:
+                            j.attack()
+                        if type(j) == Pea:
+                            balls[j]["ball"].x += 1
+                            balls[j]["ball"].draw()
+                            if balls[j]["ball"].x < i["obj"].x + 15  and balls[j]["ball"].x > i["obj"].x - 15 :
+                                i["obj"].take_damage()
+                                balls.pop(j)
                         if i["obj"].x - j.x < 10:
                             i ["move"] = False
                             i["obj"].attack(j)
