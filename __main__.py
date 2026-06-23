@@ -18,20 +18,15 @@ pea_ball = pygame.image.load("assets/images/basketball.png")
 display = pygame.display.set_mode((background.get_width(), background.get_height()))
 multiplication_x = 81
 multiplication_y = 92
-corners  = [[252, 986],[76, 575]]
-spown_time = 10
+zombie_exist = 0
 x = background.get_height() + 400
 garden = [[None, None, None, None, None, None, None, None, None],
          [None, None, None, None, None, None, None, None, None],
          [None, None, None, None, None, None, None, None, None],
          [None, None, None, None, None, None, None, None, None],
          [None, None, None, None, None, None, None, None, None]]
-balls = {}
 # garden list
-object_in_garden = {
-    "plant" : [],
-    "zombie" : []
-}
+object_in_garden = []
 # class
 class Object():
     def __init__(self, image , x, y, hp):
@@ -43,14 +38,14 @@ class Object():
         self.hp -= damage
         if self.hp <= 0:
             garden[int(self.y / multiplication_y - 1)][int(self.x/ multiplication_x - 3)] = None
-            for i in object_in_garden["plant"]:
-                if i.x == self.x and i.y  == self.y:
-                    object_in_garden["plant"].remove(i)
+            object_in_garden.remove(self)
     def draw(self, size):
         new = pygame.transform.scale(self.image, (size[0],size[1]))
         display.blit(new, (self.x, self.y))
     def move(self, speed):
         self.x += speed
+    def attack(self):
+        pass
 
 
 class Plant(Object):
@@ -62,16 +57,29 @@ class Potato(Object):
         super().__init__(image, x, y, hp)
 
 class Ball(Object):
-    def __init__(self, image, x, y, hp, pea):
+    def __init__(self, image, x, y, hp, pea, zom):
         super().__init__(image, x, y, hp)
         self.pea = pea
-        balls.update({self.pea : {"image":pea_ball, "line":int(y/multiplication_y), "ball":self}})
+        self.enemy = zom
+        object_in_garden.append(self)
+    def attack(self):
+        if  self.enemy.x - self.x <= 10 and self.enemy.x - self.x > 0 :
+            self.enemy.take_damage(5)
+            object_in_garden.remove(self)
+            self.pea.ball = True
 
 class Pea(Object):
     def __init__(self, image, x, y, hp):
         super().__init__(image, x, y, hp)
+        self.ball = True 
     def attack(self):
-        Ball(pea_ball ,self.x , self.y, 0.1, self)      
+        for i in object_in_garden:
+            if type(i) == Zombie:
+                if i.y == self.y and self.ball == True:
+                    self.last = pygame.time.get_ticks()
+                    Ball(pea_ball, self.x + 30, self.y +5 , 0.1, self, i)
+                    self.ball = False
+                
     
 class Button():
     def __init__(self, color, text):       
@@ -89,8 +97,24 @@ class Button():
 class Zombie(Object):
     def __init__(self, image, x, y, hp):
         super().__init__(image, x, y, hp)
-    def attack(self, obj):
-        obj.take_damage(1)
+        self.prem = True
+    def move(self, speed):
+        if self.prem:
+            self.x += speed
+    def attack(self):
+        line  = int(self.y / multiplication_y - 1)
+        for i in garden[line]:
+            if i != None:           
+                if i.x  - self.x == 5 or i.x - self.x == 2:
+                    i.take_damage(1)
+                    self.prem = False
+                    break
+            else:
+                self.prem = True
+    def take_damage(self, damage):
+        self.hp -= damage
+        if self.hp <= 0:
+            object_in_garden.remove(self)
 
 button = {        # get the keyboard click by "if event.key" in while loop and form this dict understand what plant should planting
     "s" : {"class":Plant, "image":flower},
@@ -98,9 +122,11 @@ button = {        # get the keyboard click by "if event.key" in while loop and f
     "b" : {"class":Pea, "image":peai}    
 }
 def rzombie():
+    global zombie_exist
     ranit = random.randrange(1,6)  
     z = Zombie(zombie, x, ranit * multiplication_y, 50)
-    object_in_garden["zombie"].append({"obj":z,"line":int(z.y/multiplication_y), "move":True})
+    object_in_garden.append(z)
+    zombie_exist += 1
 def Planting(mx, my):
     a = None
     x_multiple = int(mx / multiplication_x)
@@ -110,7 +136,7 @@ def Planting(mx, my):
     if garden[y_multiple - 1][x_multiple - 3] == None:
         try:
             a = button[plant_key]["class"](button[plant_key]["image"], x, y, 100)
-            object_in_garden["plant"].append(a)
+            object_in_garden.append(a)
             garden[y_multiple - 1][x_multiple - 3] = a
         except KeyError:
             print("press s for sunflower and p for potato and b for pea")
@@ -142,37 +168,18 @@ while True:
             Planting(mouse_pos[0], mouse_pos[1])
     # randomize the zombie line and dont let zombie spown too many
 
-    if len(object_in_garden["zombie"]) == 0:
+    if zombie_exist == 0:
         rzombie()
-    if len(object_in_garden["zombie"]) != 0:
-        for i in object_in_garden["zombie"]:
-            i["obj"].draw([110,110])
-            if i["move"] == True:
-                i["obj"].move(-1)
-            if len(object_in_garden["plant"]) != 0:
-                for j in object_in_garden["plant"]:
-                    j.draw([90,90])
-                    if i["obj"].y == j.y:
-                        if j not in balls and type(j) == Pea:
-                            j.attack()
-                        if type(j) == Pea:
-                            balls[j]["ball"].move(2)
-                            balls[j]["ball"].draw([30,30])
-                            if balls[j]["ball"].x < i["obj"].x + 15  and balls[j]["ball"].x > i["obj"].x - 15 :
-                                i["obj"].take_damage(20)
-                                print(i["obj"].hp)
-                                balls.pop(j)
-                        # print(i["obj"].x , j.x)
-                        if i["obj"].x - j.x < 10 and i["obj"].y == j.y:
-                            i ["move"] = False
-                            i["obj"].attack(j)
-                        else:
-                            i["move"] = True      
-                    else:
-                        i["move"] = True
-            else:
-                i["move"] = True
-                pass
+    for i in object_in_garden:
+        if type(i) == Zombie:
+            i.draw([110,110])
+            i.move(-1)
+        elif type(i) == Ball:
+            i.move(2)
+            i.draw([30,30])
+        else:
+            i.draw([90,90])
+        i.attack()
 
     # update every event happnend in display
     pygame.display.update()
