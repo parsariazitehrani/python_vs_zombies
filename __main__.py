@@ -8,6 +8,7 @@ pygame.init()
 display = pygame.display.set_mode((400, 500))
 clock = pygame.time.Clock()
 # load images 
+sun_shine = pygame.image.load("assets/images/sunshine.png")
 potatto = pygame.image.load("assets/images/potato.png")
 background = pygame.image.load("assets/images/background.png")
 zombie = pygame.image.load("assets/images/zombie.png")
@@ -15,9 +16,13 @@ flower = pygame.image.load("assets/images/plant.png")
 peai = pygame.image.load("assets/images/pea.png")
 pea_ball = pygame.image.load("assets/images/basketball.png")
 # game vaariable
+game_font = pygame.font.SysFont("DejaVu Sans Mono", 25)
 display = pygame.display.set_mode((background.get_width(), background.get_height()))
+display_age = 0
 multiplication_x = 81
 multiplication_y = 92
+around = [ 20, 15, -20, -15, -25, 25]
+def_sunshine = 100
 zombie_exist = 0
 x = background.get_height() + 400
 garden = [[None, None, None, None, None, None, None, None, None],
@@ -30,6 +35,9 @@ object_in_garden = []
 # class
 class Object():
     def __init__(self, image , x, y, hp):
+        self.wait = 0
+        self.planted = False
+        self.age = 0
         self.hp = hp
         self.x = x
         self.y = y
@@ -48,13 +56,17 @@ class Object():
         pass
 
 
+
 class Plant(Object):
     def __init__(self, image, x, y, hp):
+        self.pay = 25
         super().__init__(image, x, y, hp)
 
 class Potato(Object):
     def __init__(self, image, x, y, hp):
+        self.pay = 50
         super().__init__(image, x, y, hp)
+        self.hp = 2*hp
 
 class Ball(Object):
     def __init__(self, image, x, y, hp, pea, zom):
@@ -64,14 +76,16 @@ class Ball(Object):
         object_in_garden.append(self)
     def attack(self):
         if  self.enemy.x - self.x <= 10 and self.enemy.x - self.x > 0 :
-            self.enemy.take_damage(5)
+            self.enemy.take_damage(20)
             object_in_garden.remove(self)
             self.pea.ball = True
 
 class Pea(Object):
     def __init__(self, image, x, y, hp):
+        self.pay = 25
         super().__init__(image, x, y, hp)
         self.ball = True 
+        self.hp = hp - 15
     def attack(self):
         for i in object_in_garden:
             if type(i) == Zombie:
@@ -79,20 +93,20 @@ class Pea(Object):
                     self.last = pygame.time.get_ticks()
                     Ball(pea_ball, self.x + 30, self.y +5 , 0.1, self, i)
                     self.ball = False
-                
-    
-class Button():
-    def __init__(self, color, text):       
-            self.text = pygame.font.init(text, True, "white")
-            self.rect = self.text.get_rect(topleft = (10, 10))
-            self.color = color
-            self.clicked = False
-    def draw(self, w, h):
-        display.blit(self.text, self.rect)
-        pos = pygame.mouse.get_pos()
-        if self.rect.collidepoint(pos):
-             if pygame.mouse.get_pressed()[0] and self.clicked == False:
-                print("clicked")
+class Sunshine(Object):
+    def  __init__(self, image, x, y, hp):
+        super().__init__(image, x, y, hp) 
+        object_in_garden.append(self)         
+        self.x = x + random.choice(around)
+        self.y = y + random.choice(around)  
+        self.rect = image.get_rect()
+        self.rect.topleft = (x, y)
+    def attack(self):
+        global def_sunshine
+        click = pygame.mouse.get_pressed()[0]
+        if click == True:
+            object_in_garden.remove(self)
+            def_sunshine += 25
 
 class Zombie(Object):
     def __init__(self, image, x, y, hp):
@@ -101,33 +115,49 @@ class Zombie(Object):
     def move(self, speed):
         if self.prem:
             self.x += speed
+        if self.x < 150:
+            pygame.QUIT
+            exit()
     def attack(self):
         line  = int(self.y / multiplication_y - 1)
         for i in garden[line]:
             if i != None:           
-                if i.x  - self.x == 5 or i.x - self.x == 2:
-                    i.take_damage(1)
+                if i.x  - self.x >= -40:
+                    i.take_damage(0.5)
                     self.prem = False
                     break
             else:
                 self.prem = True
     def take_damage(self, damage):
+        global zombie_exist
         self.hp -= damage
         if self.hp <= 0:
-            object_in_garden.remove(self)
-
+            if self in object_in_garden:
+                object_in_garden.remove(self)
+                zombie_exist -= 1
+def draw_text(text, font, color, coordinate):
+    img = font.render(text, True, color)
+    display.blit(img, coordinate)
 button = {        # get the keyboard click by "if event.key" in while loop and form this dict understand what plant should planting
     "s" : {"class":Plant, "image":flower},
     "p" : {"class":Potato, "image":potatto},
-    "b" : {"class":Pea, "image":peai}    
+    "b" : {"class":Pea, "image":peai}  
+   
 }
+def rsunshine():
+    global def_sunshine
+    x = random.choice([200,900])
+    y = random.choice([80, 900])
+    sky = Sunshine(sun_shine, x, y , 1)
+    object_in_garden.append(sky)
 def rzombie():
     global zombie_exist
     ranit = random.randrange(1,6)  
-    z = Zombie(zombie, x, ranit * multiplication_y, 50)
-    object_in_garden.append(z)
+    object_in_garden.append(Zombie(zombie, x, ranit * multiplication_y, 100))
     zombie_exist += 1
 def Planting(mx, my):
+    global plant_key
+    global def_sunshine
     a = None
     x_multiple = int(mx / multiplication_x)
     x = multiplication_x * x_multiple
@@ -135,9 +165,15 @@ def Planting(mx, my):
     y = multiplication_y * y_multiple
     if garden[y_multiple - 1][x_multiple - 3] == None:
         try:
-            a = button[plant_key]["class"](button[plant_key]["image"], x, y, 100)
-            object_in_garden.append(a)
-            garden[y_multiple - 1][x_multiple - 3] = a
+            if def_sunshine >= 25:
+                a = button[plant_key]["class"](button[plant_key]["image"], x, y, 50)
+                if a.planted == False:
+                    object_in_garden.append(a)
+                    garden[y_multiple - 1][x_multiple - 3] = a
+                    def_sunshine -= a.pay
+                    plant_key = None
+            else:
+                print("you'r sunshine isn't enough")
         except KeyError:
             print("press s for sunflower and p for potato and b for pea")
 plant_key = None    # temporary variable for keep eaht shortcut pressed
@@ -166,20 +202,45 @@ while True:
             print("clicked out of garden")  
         else:
             Planting(mouse_pos[0], mouse_pos[1])
-    # randomize the zombie line and dont let zombie spown too many
-
+    #text in screen
+    draw_text(f"sunshine:{def_sunshine}", game_font, "black", (250,25))
+    # moving ,attcking ...all object in game
     if zombie_exist == 0:
         rzombie()
-    for i in object_in_garden:
-        if type(i) == Zombie:
+    for i in object_in_garden[:]:
+        if isinstance(i, Zombie):
             i.draw([110,110])
-            i.move(-1)
-        elif type(i) == Ball:
-            i.move(2)
+            i.move(-2)
+            i.age += 0.5
+            i.attack()
+            if i.age % 200 == 0:
+                rzombie()
+        elif isinstance(i, Ball):
+            i.move(3)
             i.draw([30,30])
+            i.attack()
+        elif isinstance(i, Sunshine):
+            i.draw([45,45])
+            i.age += 0.5
+            pos = pygame.mouse.get_pos()
+            if i.rect.collidepoint(pos):
+                i.attack()
         else:
+            i.age += 0.5
             i.draw([90,90])
-        i.attack()
+            if i.age % 25 == 0:
+                i.attack()
+            if isinstance(i, Plant):
+                if i.age % 150 == 0:
+                    Sunshine(sun_shine, i.x, i.y, 1)
+    display_age += 0.5
+    if display_age % 150 == 0:
+        rsunshine()
+    # if zombie_exist == 7:
+    #     draw_text("win", game_font, "white", (300,300))
+    #     time.sleep(100)
+    #     pygame.quit()
+    #     exit()    
 
     # update every event happnend in display
     pygame.display.update()
