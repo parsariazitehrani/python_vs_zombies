@@ -88,8 +88,8 @@ class Pea(Object):
         self.hp = hp - 15
     def attack(self):
         for i in object_in_garden:
-            if type(i) == Zombie:
-                if i.y == self.y and self.ball == True:
+            if isinstance(i, Zombie):
+                if i.y == self.y and self.ball == True and i.x > self.x:
                     self.last = pygame.time.get_ticks()
                     Ball(pea_ball, self.x + 30, self.y +5 , 0.1, self, i)
                     self.ball = False
@@ -122,7 +122,7 @@ class Zombie(Object):
         line  = int(self.y / multiplication_y - 1)
         for i in garden[line]:
             if i != None:           
-                if i.x  - self.x >= -40:
+                if i.x  - self.x >= -40 and i.x < self.x:
                     i.take_damage(0.5)
                     self.prem = False
                     break
@@ -245,3 +245,6 @@ while True:
     # update every event happnend in display
     pygame.display.update()
     clock.tick(60)
+
+
+
